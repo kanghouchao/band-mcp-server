@@ -10,6 +10,7 @@ on:
       - 'docs/**'
       - 'LICENSE'
       - '.gitignore'
+  workflow_dispatch: {}
 
 permissions:
     contents: read
@@ -42,7 +43,12 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           echo "Publishing package to npm..."
-          npm publish --access public
+          if [[ "$(jq -r .version package.json)" == *"snapshot"* ]]; then
+            echo "Detected snapshot version, publishing with 'snapshot' tag"
+            npm publish --tag snapshot --access public
+          else
+            npm publish --access public
+          fi
 
   # Docker: build-and-push on any v* tag (includes vX or vX.Y.Z)
   publish-docker:
@@ -70,6 +76,8 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest
+          # If manual run publishes a snapshot version (package.json contains 'snapshot'), add a 'snapshot' tag
+          # The metadata-action doesn't support conditional tags directly, so we'll append a snapshot tag later if needed
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -82,3 +90,19 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           target: production
+      - name: Add snapshot tag (if applicable)
+        if: ${{ always() }}
+        run: |
+          if [[ "$(jq -r .version package.json)" == *"snapshot"* ]]; then
+            echo "Adding snapshot tag to Docker Hub"
+            # Re-tag the pushed image with a snapshot tag using docker CLI
+            # Construct image name using metadata outputs if available; fall back to image:latest
+            IMAGE_NAME="kanghouchao/band-mcp-server:latest"
+            docker pull "$IMAGE_NAME" || true
+            docker tag "$IMAGE_NAME" "kanghouchao/band-mcp-server:snapshot"
+            echo "Pushing snapshot tag"
+            echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username "kanghouchao" --password-stdin
+            docker push "kanghouchao/band-mcp-server:snapshot"
+          else
+            echo "No snapshot version detected; skipping snapshot tagging"
+          fi

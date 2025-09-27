@@ -1,6 +1,6 @@
 {
   "name": "band-mcp-server",
-  "version": "1.0.3",
+  "version": "1.0.4-snapshot",
   "description": "Model Context Protocol server for Band API integration",
   "main": "dist/index.js",
   "bin": {
@@ -15,7 +15,8 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "prepublishOnly": "npm run build && npm test",
-    "release": "npm run build && npm test && npm publish --access public"
+    "release": "npm run build && npm test && npm publish --access public",
+    "release:snapshot": "npm run build && npm test && npm publish --tag snapshot --access public"
   },
   "keywords": [
     "mcp",
