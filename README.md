@@ -4,7 +4,7 @@ A fully functional Model Context Protocol (MCP) server that integrates with the 
 
 ## ✅ Project Status: Production Ready
 
-**Version:** 1.0.3  
+**Version:** 1.0.4  
 **Docker Image:** `kanghouchao/band-mcp-server:latest`
 
 This MCP server is fully implemented and provides complete access to Band API functionality including user profiles, band management, posts, comments, albums, and photos with full read/write capabilities.
@@ -109,6 +109,92 @@ docker run --rm -i -e BAND_ACCESS_TOKEN=your_token_here band-mcp-server:latest
 ```
 
 ## Available MCP Tools
+
+## Alternative MCP startup methods
+
+This project now supports multiple ways to start the MCP server. Choose the option that best fits your environment.
+
+- Docker (recommended for isolation and production):
+
+```bash
+# Build and run
+docker build -t kanghouchao/band-mcp-server:latest .
+docker run --rm -i -e BAND_ACCESS_TOKEN=your_token_here kanghouchao/band-mcp-server:latest
+```
+
+- Global npm install (convenient for CLI-style usage):
+
+```bash
+npm install -g .
+# Then run
+band-mcp-server
+```
+
+- Run directly from the public registry (no install):
+
+```bash
+# Run the published package once via npx
+npx band-mcp-server
+```
+
+- Install from the public registry (local install):
+
+```bash
+# Install as a dependency in the current project
+npm i band-mcp-server
+# or install globally
+npm i -g band-mcp-server
+```
+
+- Run the local repository (development):
+
+```bash
+# Run the package in the current checkout (no publish needed)
+npx .
+# or run the compiled/ts entry directly in dev with tsx
+npx tsx src/index.ts
+```
+
+- Direct node/tsx (development):
+
+```bash
+# Run directly with tsx (fast dev experience)
+npx tsx src/index.ts
+```
+
+When configuring MCP clients (e.g., VS Code settings), update the `command` and `args` fields to match the chosen startup method.
+
+## About the "npx" / published-package startup
+
+This project provides a small executable wrapper so the package can be run directly from the public npm registry using `npx` (for example: `npx band-mcp-server`). The wrapper is declared in the package `bin` field and forwards execution to the compiled CLI at `dist/cli.js`.
+
+Key points and requirements:
+
+- How it works: when you run `npx band-mcp-server`, npm will download the published package tarball, extract it to a temporary location, and run the executable declared in the package `bin` field (our `bin/band-mcp-server`). That wrapper loads `dist/cli.js` (ESM) which boots the MCP server.
+
+- Build / publish considerations: the published package must include the compiled `dist/` output (or alternatively include a `prepare`/`postinstall` script to build at install time). Our `package.json` already contains a `prepublishOnly` script that runs the build and tests before publishing; ensure your release process publishes the built artifacts so `npx` users get a working binary.
+
+- Environment variables: `npx` does not set environment variables for you. Provide required environment variables (for example `BAND_ACCESS_TOKEN`) in the same shell invocation:
+
+```bash
+# set the required token in the environment and run the published package once
+BAND_ACCESS_TOKEN=your_token_here npx band-mcp-server
+```
+
+- Running a specific version: you can target a release tag or version with npx:
+
+```bash
+npx band-mcp-server@1.0.4
+```
+
+- Local development vs published package: during dev you can run `npx .` from the checkout (it will run the local `bin` wrapper or via tsx), but the published `npx <pkg>` behavior depends on what was included in the published tarball.
+
+- Troubleshooting:
+  - If `npx` fails with a missing module or cannot find `dist/cli.js`, verify the published package contains `dist/` or add a `prepare` script that builds on install.
+  - If the CLI exits with permission errors, ensure the wrapper file has the executable permission in the published package (npm preserves file mode when packaging). Locally, ensure `bin/band-mcp-server` is executable (`chmod +x bin/band-mcp-server`).
+  - For reproducible installs in CI or servers, prefer installing a specific version (`npm i band-mcp-server@1.0.4`) or pin the Docker image.
+
+If you'd like, I can also add a short note to the `package.json` (a `files` entry or `prepare` script) to make publishing and `npx` more robust — tell me which approach you prefer and I will prepare the change.
 
 ### User & Band Management
 - **`get_user_information`** - Get user profile information for a Band group

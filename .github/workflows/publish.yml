@@ -16,8 +16,28 @@ permissions:
     contents: read
 
 jobs:
+  # Read package metadata once so multiple jobs can reuse it
+  get-package-meta:
+    runs-on: ubuntu-latest
+    outputs:
+      pkg_name: ${{ steps.read.outputs.pkg_name }}
+      pkg_version: ${{ steps.read.outputs.pkg_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read package.json
+        id: read
+        run: |
+          echo "Reading package.json"
+          PKG_NAME=$(jq -r .name package.json)
+          PKG_VERSION=$(jq -r .version package.json)
+          echo "pkg_name=$PKG_NAME" >> $GITHUB_OUTPUT
+          echo "pkg_version=$PKG_VERSION" >> $GITHUB_OUTPUT
+
   # NPM publish job: run only for semver-like tags (vX.Y.Z or other tags containing a dot)
   publish-npm:
+    needs: get-package-meta
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -41,17 +61,25 @@ jobs:
       - name: Publish package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PKG_NAME: ${{ needs.get-package-meta.outputs.pkg_name }}
+          PKG_VERSION: ${{ needs.get-package-meta.outputs.pkg_version }}
         run: |
           echo "Publishing package to npm..."
-          if [[ "$(jq -r .version package.json)" == *"snapshot"* ]]; then
-            echo "Detected snapshot version, publishing with 'snapshot' tag"
+          if [[ "$PKG_VERSION" == *"snapshot"* ]]; then
+            SNAP_VERSION="${PKG_VERSION}.${RUN_ID}+${GIT_SHA:0:7}"
+            echo "Detected snapshot version, final publish version: $SNAP_VERSION"
+            npm version --no-git-tag-version "$SNAP_VERSION"
             npm publish --tag snapshot --access public
           else
             npm publish --access public
+            echo "Tagging published package as 'latest'"
+            echo "Adding dist-tag: $PKG_NAME@$PKG_VERSION -> latest"
+            npm dist-tag add "$PKG_NAME@$PKG_VERSION" latest
           fi
 
   # Docker: build-and-push on any v* tag (includes vX or vX.Y.Z)
   publish-docker:
+    needs: get-package-meta
     runs-on: ubuntu-latest
 
     steps:
@@ -67,17 +95,25 @@ jobs:
           username: "kanghouchao"
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
+      - name: Compute docker tags
+        id: docker_tags
+        run: |
+          VERSION=${{ needs.get-package-meta.outputs.pkg_version }}
+          echo "Generating tags for VERSION=$VERSION"
+          echo "tag_lines<<EOF" >> $GITHUB_OUTPUT
+          echo "type=raw,value=$VERSION" >> $GITHUB_OUTPUT
+          if [[ "$VERSION" != *"snapshot"* ]]; then
+            echo "type=raw,value=latest" >> $GITHUB_OUTPUT
+          fi
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: kanghouchao/band-mcp-server
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest
-          # If manual run publishes a snapshot version (package.json contains 'snapshot'), add a 'snapshot' tag
-          # The metadata-action doesn't support conditional tags directly, so we'll append a snapshot tag later if needed
+            ${{ steps.docker_tags.outputs.tag_lines }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -90,19 +126,3 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           target: production
-      - name: Add snapshot tag (if applicable)
-        if: ${{ always() }}
-        run: |
-          if [[ "$(jq -r .version package.json)" == *"snapshot"* ]]; then
-            echo "Adding snapshot tag to Docker Hub"
-            # Re-tag the pushed image with a snapshot tag using docker CLI
-            # Construct image name using metadata outputs if available; fall back to image:latest
-            IMAGE_NAME="kanghouchao/band-mcp-server:latest"
-            docker pull "$IMAGE_NAME" || true
-            docker tag "$IMAGE_NAME" "kanghouchao/band-mcp-server:snapshot"
-            echo "Pushing snapshot tag"
-            echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username "kanghouchao" --password-stdin
-            docker push "kanghouchao/band-mcp-server:snapshot"
-          else
-            echo "No snapshot version detected; skipping snapshot tagging"
-          fi

@@ -4,7 +4,7 @@
   "description": "Model Context Protocol server for Band API integration",
   "main": "dist/index.js",
   "bin": {
-    "band-mcp-server": "dist/cli.js"
+    "band-mcp-server": "bin/band-mcp-server"
   },
   "type": "module",
   "scripts": {
