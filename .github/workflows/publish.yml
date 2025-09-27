@@ -1,0 +1,108 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+    paths-ignore:
+      - '**.md'
+      - '**.txt'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
+  workflow_dispatch: {}
+
+permissions:
+    contents: read
+
+jobs:
+  # NPM publish job: run only for semver-like tags (vX.Y.Z or other tags containing a dot)
+  publish-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+      - name: Publish package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "Publishing package to npm..."
+          if [[ "$(jq -r .version package.json)" == *"snapshot"* ]]; then
+            echo "Detected snapshot version, publishing with 'snapshot' tag"
+            npm publish --tag snapshot --access public
+          else
+            npm publish --access public
+          fi
+
+  # Docker: build-and-push on any v* tag (includes vX or vX.Y.Z)
+  publish-docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: "kanghouchao"
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: kanghouchao/band-mcp-server
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+          # If manual run publishes a snapshot version (package.json contains 'snapshot'), add a 'snapshot' tag
+          # The metadata-action doesn't support conditional tags directly, so we'll append a snapshot tag later if needed
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          target: production
+      - name: Add snapshot tag (if applicable)
+        if: ${{ always() }}
+        run: |
+          if [[ "$(jq -r .version package.json)" == *"snapshot"* ]]; then
+            echo "Adding snapshot tag to Docker Hub"
+            # Re-tag the pushed image with a snapshot tag using docker CLI
+            # Construct image name using metadata outputs if available; fall back to image:latest
+            IMAGE_NAME="kanghouchao/band-mcp-server:latest"
+            docker pull "$IMAGE_NAME" || true
+            docker tag "$IMAGE_NAME" "kanghouchao/band-mcp-server:snapshot"
+            echo "Pushing snapshot tag"
+            echo "${{ secrets.DOCKER_HUB_TOKEN }}" | docker login --username "kanghouchao" --password-stdin
+            docker push "kanghouchao/band-mcp-server:snapshot"
+          else
+            echo "No snapshot version detected; skipping snapshot tagging"
+          fi
