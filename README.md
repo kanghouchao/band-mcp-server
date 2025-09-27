@@ -4,7 +4,7 @@ A fully functional Model Context Protocol (MCP) server that integrates with the 
 
 ## ✅ Project Status: Production Ready
 
-**Version:** 1.0.3  
+**Version:** 1.0.4  
 **Docker Image:** `kanghouchao/band-mcp-server:latest`
 
 This MCP server is fully implemented and provides complete access to Band API functionality including user profiles, band management, posts, comments, albums, and photos with full read/write capabilities.
@@ -109,6 +109,60 @@ docker run --rm -i -e BAND_ACCESS_TOKEN=your_token_here band-mcp-server:latest
 ```
 
 ## Available MCP Tools
+
+## Alternative MCP startup methods
+
+This project now supports multiple ways to start the MCP server. Choose the option that best fits your environment.
+
+- Docker (recommended for isolation and production):
+
+```bash
+# Build and run
+docker build -t kanghouchao/band-mcp-server:latest .
+docker run --rm -i -e BAND_ACCESS_TOKEN=your_token_here kanghouchao/band-mcp-server:latest
+```
+
+- Global npm install (convenient for CLI-style usage):
+
+```bash
+npm install -g .
+# Then run
+band-mcp-server
+```
+
+- Run directly from the public registry (no install):
+
+```bash
+# Run the published package once via npx
+npx band-mcp-server
+```
+
+- Install from the public registry (local install):
+
+```bash
+# Install as a dependency in the current project
+npm i band-mcp-server
+# or install globally
+npm i -g band-mcp-server
+```
+
+- Run the local repository (development):
+
+```bash
+# Run the package in the current checkout (no publish needed)
+npx .
+# or run the compiled/ts entry directly in dev with tsx
+npx tsx src/index.ts
+```
+
+- Direct node/tsx (development):
+
+```bash
+# Run directly with tsx (fast dev experience)
+npx tsx src/index.ts
+```
+
+When configuring MCP clients (e.g., VS Code settings), update the `command` and `args` fields to match the chosen startup method.
 
 ### User & Band Management
 - **`get_user_information`** - Get user profile information for a Band group
