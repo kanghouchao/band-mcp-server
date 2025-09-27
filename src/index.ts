@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { 
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
-import { bandTools, handleToolCall } from './tools.js';
+} from "@modelcontextprotocol/sdk/types.js";
+import { bandTools, handleToolCall } from "./tools.js";
 
 const server = new Server(
   {
-    name: 'band-mcp-server',
-    version: '1.0.2',
+    name: "band-mcp-server",
+    version: "1.0.2",
   },
   {
     capabilities: {
@@ -31,11 +31,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   return await handleToolCall(name, args);
 });
 
-async function main(): Promise<void> {
+/**
+ * Start the MCP server using stdio transport. Exported so CLI can import and control when to start.
+ */
+export async function startServerWithStdIO(): Promise<void> {
   await server.connect(new StdioServerTransport());
 }
 
-main().catch((error) => {
-  console.error('Server error:', error);
-  process.exit(1);
-});
+// If this file is run directly (node src/index.ts), start the server immediately.
+if (process.argv[1] && process.argv[1].endsWith("index.ts")) {
+  startServerWithStdIO().catch((error) => {
+    console.error("Server error:", error);
+    process.exit(1);
+  });
+}
