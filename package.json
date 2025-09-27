@@ -8,14 +8,14 @@
   },
   "type": "module",
   "scripts": {
-  "build": "tsc",
-  "dev": "tsx watch src/index.ts",
-  "test": "jest",
-  "test:watch": "jest --watch",
-  "lint": "eslint src/**/*.ts",
-  "lint:fix": "eslint src/**/*.ts --fix",
-  "prepublishOnly": "npm run build && npm test",
-  "release": "npm run build && npm test && npm publish --access public"
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "prepublishOnly": "npm run build && npm test",
+    "release": "npm run build && npm test && npm publish --access public"
   },
   "keywords": [
     "mcp",
