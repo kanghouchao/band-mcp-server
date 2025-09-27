@@ -1,0 +1,10 @@
+#!/usr/bin/env node
+// Wrapper to load the compiled CLI (ESM). Keeps shebang for npm/npx execution.
+(async () => {
+  try {
+    await import('../dist/cli.js');
+  } catch (err) {
+    console.error('Failed to start band-mcp-server:', err);
+    process.exit(1);
+  }
+})();
