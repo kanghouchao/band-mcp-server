@@ -66,7 +66,9 @@ jobs:
         run: |
           echo "Publishing package to npm..."
           if [[ "$PKG_VERSION" == *"snapshot"* ]]; then
-            echo "Detected snapshot version, publishing with 'snapshot' tag"
+            SNAP_VERSION="${PKG_VERSION}.${RUN_ID}+${GIT_SHA:0:7}"
+            echo "Detected snapshot version, final publish version: $SNAP_VERSION"
+            npm version --no-git-tag-version "$SNAP_VERSION"
             npm publish --tag snapshot --access public
           else
             npm publish --access public
