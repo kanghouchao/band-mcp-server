@@ -3,6 +3,7 @@
  * @see https://developers.band.us/develop/guide/api/get_posts
  */
 import { bandApiClient } from "../client.js";
+import { parseBandUrl } from "../url.js";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 export const ToolDefinition: Tool = {
@@ -33,8 +34,17 @@ export const ToolDefinition: Tool = {
         default: 20,
         description: "number of posts to load. min: 1, max: 100, default: 20",
       },
+      url: {
+        type: "string",
+        title: "Band URL",
+        description:
+          "Full BAND URL to the band page (e.g., https://band.us/band/{band_key}).",
+      },
     },
-    required: ["band_key"],
+    anyOf: [
+      { required: ["band_key"] },
+      { required: ["url"] },
+    ],
   },
   outputSchema: {
     type: "object",
@@ -185,12 +195,28 @@ interface PostsResponse {
 }
 
 export async function handleToolCall(
-  band_key: string,
-  locale: string,
+  band_key: string | undefined,
+  locale?: string,
   after?: string,
-  limit?: number
+  limit?: number,
+  url?: string
 ) {
-  const params: Record<string, unknown> = { band_key, locale };
+  let resolvedBandKey = band_key ? band_key.trim() : undefined;
+  if ((!resolvedBandKey || resolvedBandKey.length === 0) && url) {
+    const parsed = parseBandUrl(url);
+    resolvedBandKey = parsed.bandKey;
+  }
+
+  if (!resolvedBandKey) {
+    throw new Error("Either band_key or a valid BAND url must be provided.");
+  }
+
+  const resolvedLocale = locale && locale.trim().length > 0 ? locale : "ja_JP";
+
+  const params: Record<string, unknown> = {
+    band_key: resolvedBandKey,
+    locale: resolvedLocale,
+  };
   if (after) (params as Record<string, unknown>).after = after;
   if (limit) (params as Record<string, unknown>).limit = limit;
 
