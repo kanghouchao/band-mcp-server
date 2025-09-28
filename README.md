@@ -42,6 +42,11 @@ This MCP server is fully implemented and provides complete access to Band API fu
 }
 ```
 
+### Tool Tips
+
+- `get_posts` now accepts either a raw `band_key` or a full Band URL such as `https://band.us/band/{band_key}`. When a URL is supplied the server extracts the `band_key` automatically.
+- `get_comments` likewise accepts a comment or post URL (e.g. `https://band.us/band/{band_key}/post/{post_key}?commentId={comment_key}`) and filters the response down to the referenced comment when possible.
+
 ## License
 
 MIT License - see LICENSE file for details.

@@ -37,18 +37,20 @@ export function handleToolCall(name: string, args: unknown) {
         return bands.handleToolCall();
       case "get_posts":
         return posts.handleToolCall(
-          a.band_key as string,
-          a.locale as string,
+          a.band_key as string | undefined,
+          a.locale as string | undefined,
           a.after as string | undefined,
-          a.limit as number | undefined
+          a.limit as number | undefined,
+          a.url as string | undefined
         );
       case "get_post":
         return post.handleToolCall(a.band_key as string, a.post_key as string);
       case "get_comments":
         return comments.handleToolCall(
-          a.band_key as string,
-          a.post_key as string,
-          a.sort as string | undefined
+          a.band_key as string | undefined,
+          a.post_key as string | undefined,
+          a.sort as string | undefined,
+          a.url as string | undefined
         );
       case "permissions":
         return permissions.handleToolCall(

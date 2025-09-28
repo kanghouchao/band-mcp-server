@@ -4,6 +4,7 @@
  */
 import { bandApiClient } from "../client.js";
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { parseBandUrl } from "../url.js";
 
 export const ToolDefinition: Tool = {
   name: "get_comments",
@@ -26,8 +27,17 @@ export const ToolDefinition: Tool = {
         title: "Sort",
         description: "sort order for comments",
       },
+      url: {
+        type: "string",
+        title: "Comment URL",
+        description:
+          "Full BAND URL to the post or comment (e.g., https://band.us/band/{band_key}/post/{post_key}?commentId={comment_key}).",
+      },
     },
-    required: ["band_key", "post_key"],
+    anyOf: [
+      { required: ["band_key", "post_key"] },
+      { required: ["url"] },
+    ],
   },
   outputSchema: {
     type: "object",
@@ -104,30 +114,63 @@ interface CommentItem {
 }
 
 interface CommentsResponse {
-  result_code: number;
-  result_data: {
-    paging: PagingParams;
-    items: CommentItem[];
-  };
+  paging: PagingParams;
+  items: CommentItem[];
 }
 
 export async function handleToolCall(
-  band_key: string,
-  post_key: string,
-  sort?: string
+  band_key: string | undefined,
+  post_key: string | undefined,
+  sort?: string,
+  url?: string
 ) {
-  const params: Record<string, unknown> = { band_key, post_key };
+  let resolvedBandKey = band_key ? band_key.trim() : undefined;
+  let resolvedPostKey = post_key ? post_key.trim() : undefined;
+  let targetCommentKey: string | undefined;
+
+  if (url) {
+    const parsed = parseBandUrl(url);
+    if (!resolvedBandKey) resolvedBandKey = parsed.bandKey;
+    if (!resolvedPostKey) resolvedPostKey = parsed.postKey;
+    targetCommentKey = parsed.commentKey;
+  }
+
+  if (!resolvedBandKey || !resolvedPostKey) {
+    throw new Error(
+      "band_key and post_key are required unless a valid BAND url is provided.",
+    );
+  }
+
+  const params: Record<string, unknown> = { band_key: resolvedBandKey, post_key: resolvedPostKey };
   if (sort) params.sort = sort;
 
   const commentsData = await bandApiClient.get<CommentsResponse>(
     "/v2/band/post/comments",
     params
   );
+  let payload = commentsData;
+
+  if (targetCommentKey) {
+    const matched = commentsData.items.filter(
+      (item) => item.comment_key === targetCommentKey,
+    );
+
+    if (matched.length === 0) {
+      throw new Error(
+        `Comment ${targetCommentKey} was not found in the retrieved page. Try fetching the comments without filtering or adjust pagination.`,
+      );
+    }
+
+    payload = {
+      ...commentsData,
+      items: matched,
+    };
+  }
   return {
     content: [
       {
         type: "text",
-        text: JSON.stringify(commentsData, null, 2),
+        text: JSON.stringify(payload, null, 2),
       },
     ],
   };
