@@ -11,7 +11,7 @@ export interface EmulatedPage<T> {
   nextCursor?: string | null;
 }
 
-export function encodeCursor(obj: any): string {
+export function encodeCursor(obj: unknown): string {
   try {
     return Buffer.from(JSON.stringify(obj)).toString("base64");
   } catch {
@@ -19,7 +19,7 @@ export function encodeCursor(obj: any): string {
   }
 }
 
-export function decodeCursor(cursor?: string): any | null {
+export function decodeCursor(cursor?: string): Record<string, unknown> | null {
   if (!cursor) return null;
   try {
     const s = Buffer.from(cursor, "base64").toString("utf8");

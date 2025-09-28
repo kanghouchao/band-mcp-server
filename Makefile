@@ -27,18 +27,24 @@ dev:
 
 # Docker commands
 docker-build:
-	docker build -t band-mcp-server:latest .
+	docker build --target production -t kanghouchao/band-mcp-server:latest .
 
 docker-run:
 	docker run --rm -it \
 		-e BAND_ACCESS_TOKEN=${BAND_ACCESS_TOKEN} \
 		-p 3000:3000 \
-		band-mcp-server:latest
+		kanghouchao/band-mcp-server:latest
 
 # Test command (placeholder)
 test:
 	@echo "Running tests..."
 	npm test 2>/dev/null || echo "No tests configured yet"
+
+lint:
+	npm run lint
+
+lint-fix:
+	npm run lint:fix
 
 # Clean build artifacts
 clean:

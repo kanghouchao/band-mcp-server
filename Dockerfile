@@ -6,8 +6,8 @@ FROM base AS deps
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+COPY package.json ./
+RUN npm install && npm ci --only=production && npm cache clean --force
 
 # Build stage
 FROM base AS builder
@@ -27,7 +27,7 @@ COPY src ./src
 RUN npm run build
 
 # Production stage
-FROM base AS production
+FROM node:23.11.0-alpine AS production
 WORKDIR /app
 
 # Create non-root user
@@ -43,6 +43,8 @@ COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 # Copy package.json for metadata
 COPY --chown=nodejs:nodejs package.json ./
 
+COPY --chown=nodejs:nodejs bin ./bin
+
 # Switch to non-root user
 USER nodejs
 
@@ -57,4 +59,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 ENV NODE_ENV=production
 
 # Start the application
-CMD ["node", "dist/index.js"]
+CMD ["node", "bin/band-mcp-server"]
