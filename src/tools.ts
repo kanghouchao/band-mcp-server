@@ -1,16 +1,16 @@
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
-import profile from './profile/index.js';
-import bands from './bands/index.js';
-import posts from './posts/index.js';
-import post from './post/index.js';
-import comments from './comments/index.js';
-import permissions from './permissions/index.js';
-import albums from './albums/index.js';
-import photos from './photos/index.js';
-import writeComment from './writeComment/index.js';
-import writePost from './writePost/index.js';
-import removePost from './removePost/index.js';
-import removeComment from './removeComment/index.js';
+import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import profile from "./profile/index.js";
+import bands from "./bands/index.js";
+import posts from "./posts/index.js";
+import post from "./post/index.js";
+import comments from "./comments/index.js";
+import permissions from "./permissions/index.js";
+import albums from "./albums/index.js";
+import photos from "./photos/index.js";
+import writeComment from "./writeComment/index.js";
+import writePost from "./writePost/index.js";
+import removePost from "./removePost/index.js";
+import removeComment from "./removeComment/index.js";
 
 export const bandTools: Tool[] = [
   profile.ToolDefinition,
@@ -24,48 +24,88 @@ export const bandTools: Tool[] = [
   writeComment.ToolDefinition,
   writePost.ToolDefinition,
   removePost.ToolDefinition,
-  removeComment.ToolDefinition
+  removeComment.ToolDefinition,
 ];
 
-export function handleToolCall(name: string, args: any) {
+export function handleToolCall(name: string, args: unknown) {
   try {
+    const a = args as Record<string, unknown>;
     switch (name) {
       case "get_user_information":
-        return profile.handleToolCall(args.band_key);
+        return profile.handleToolCall(a.band_key as string | undefined);
       case "get_bands":
         return bands.handleToolCall();
       case "get_posts":
-        return posts.handleToolCall(args.band_key, args.locale, args.after, args.limit);
+        return posts.handleToolCall(
+          a.band_key as string,
+          a.locale as string,
+          a.after as string | undefined,
+          a.limit as number | undefined
+        );
       case "get_post":
-        return post.handleToolCall(args.band_key, args.post_key);
+        return post.handleToolCall(a.band_key as string, a.post_key as string);
       case "get_comments":
-        return comments.handleToolCall(args.band_key, args.post_key, args.sort);
+        return comments.handleToolCall(
+          a.band_key as string,
+          a.post_key as string,
+          a.sort as string | undefined
+        );
       case "permissions":
-        return permissions.handleToolCall(args.band_key, args.permissions);
+        return permissions.handleToolCall(
+          a.band_key as string,
+          a.permissions as string
+        );
       case "get_albums":
-        return albums.handleToolCall(args.band_key);
+        return albums.handleToolCall(a.band_key as string);
       case "get_photos":
-        return photos.handleToolCall(args.band_key, args.photo_album_key);
+        return photos.handleToolCall(
+          a.band_key as string,
+          a.photo_album_key as string | undefined
+        );
       case "write_comment":
-        return writeComment.handleToolCall(args.band_key, args.post_key, args.body);
+        return writeComment.handleToolCall(
+          a.band_key as string,
+          a.post_key as string,
+          a.body as string
+        );
       case "write_post":
-        return writePost.handleToolCall(args.band_key, args.content, args.do_push);
+        return writePost.handleToolCall(
+          a.band_key as string,
+          a.content as string,
+          a.do_push as boolean | undefined
+        );
       case "remove_post":
-        return removePost.handleToolCall(args.band_key, args.post_key);
+        return removePost.handleToolCall(
+          a.band_key as string,
+          a.post_key as string
+        );
       case "remove_comment":
-        return removeComment.handleToolCall(args.band_key, args.post_key, args.comment_key);
+        return removeComment.handleToolCall(
+          a.band_key as string,
+          a.post_key as string,
+          a.comment_key as string
+        );
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
   } catch (error) {
     return {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          success: false,
-          error: error instanceof Error ? error.message : "Failed to get user information"
-        }, null, 2)
-      }]
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            {
+              success: false,
+              error:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to get user information",
+            },
+            null,
+            2
+          ),
+        },
+      ],
     };
   }
 }
