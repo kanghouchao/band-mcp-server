@@ -40,6 +40,12 @@ test:
 	@echo "Running tests..."
 	npm test 2>/dev/null || echo "No tests configured yet"
 
+lint:
+	npm run lint
+
+lint-fix:
+	npm run lint:fix
+
 # Clean build artifacts
 clean:
 	rm -rf dist/
