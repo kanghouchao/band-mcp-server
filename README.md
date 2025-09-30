@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./icon/logo.svg" alt="Project Logo" width="200"/>
+  <img src="https://raw.githubusercontent.com/kanghouchao/band-mcp-server/refs/heads/master/icon/logo.svg" alt="Project Logo" width="200"/>
 </p>
 # Band MCP Server
 
@@ -68,74 +68,6 @@ This method uses the Docker image and does not require `npm`.
 }
 ```
 *Replace `your_band_api_access_token` with your actual token.*
-
-## Local Development
-
-Instructions for setting up the project for local development.
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) (version specified in `package.json`)
-- [Docker](https://www.docker.com/)
-
-### Setup
-
-Clone the repository and install dependencies using the `make` command:
-
-```bash
-make install
-```
-
-### Running the Dev Server
-
-To run the server with hot-reloading:
-
-```bash
-make dev
-```
-
-### Running Tests
-
-To run the test suite:
-
-```bash
-make test
-```
-
-### Building the Project
-
-To compile the TypeScript code:
-
-```bash
-make build
-```
-
-### Linting
-
-To check the code against linting rules:
-
-```bash
-make lint
-```
-To automatically fix linting issues:
-```bash
-make lint-fix
-```
-
-### Docker
-
-To build the Docker image locally:
-
-```bash
-make docker-build
-```
-
-To run the locally built image (requires `BAND_ACCESS_TOKEN` to be set in your shell environment):
-
-```bash
-export BAND_ACCESS_TOKEN="your_token_here"
-make docker-run
-```
 
 ## License
 
