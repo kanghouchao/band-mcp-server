@@ -50,7 +50,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build
         run: npm run build
@@ -128,9 +128,9 @@ jobs:
           target: production
 
       - name: Update Docker Hub description
-        uses: peter-evans/dockerhub-description@v4
+        uses: peter-evans/dockerhub-description@v4.0.2
         with:
           username: "kanghouchao"
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
           repository: kanghouchao/band-mcp-server
-          readme: ./DOCKER_README.md
+          readme-filepath: ./DOCKER_README.md
