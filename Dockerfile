@@ -7,18 +7,14 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json ./
-RUN npm install && npm ci --only=production && npm cache clean --force
+RUN npm install
 
 # Build stage
 FROM base AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
 COPY tsconfig.json ./
-
-# Install all dependencies (including devDependencies)
-RUN npm ci
 
 # Copy source code
 COPY src ./src
