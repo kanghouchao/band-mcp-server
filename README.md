@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="./icon/logo.svg" alt="Project Logo" width="200"/>
+</p>
 # Band MCP Server
 
 [![NPM Version](https://img.shields.io/npm/v/band-mcp-server.svg)](https://www.npmjs.com/package/band-mcp-server)

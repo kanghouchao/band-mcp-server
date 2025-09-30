@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="./logo.svg" alt="Project Logo" width="200"/>
+</p>
 # Band MCP Server (Docker)
 
 This document explains how to configure an MCP client, such as Claude Desktop, to use the `band-mcp-server` Docker image on-demand.

@@ -1,3 +1,6 @@
+<p align="center">
+  <img src="./logo.svg" alt="Project Logo" width="200"/>
+</p>
 # Band MCP Server
 
 [![npm version](https://badge.fury.io/js/band-mcp-server.svg)](https://badge.fury.io/js/band-mcp-server)
