@@ -1,5 +1,5 @@
 # Multi-stage build for band-mcp-server
-FROM node:23.11.0-alpine AS builder
+FROM node:24.9.0-alpine3.22 AS builder
 WORKDIR /app
 
 # Copy package files (including lockfile if present) so npm can install devDependencies
@@ -19,7 +19,7 @@ RUN npm run build
 RUN npm prune --production
 
 # Production stage
-FROM node:23.11.0-alpine AS production
+FROM node:24.9.0-alpine3.22 AS production
 WORKDIR /app
 
 # Create non-root user
@@ -36,6 +36,8 @@ COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
 COPY --chown=nodejs:nodejs package.json ./
 
 COPY --chown=nodejs:nodejs bin ./bin
+
+ENV NODE_ENV=production
 
 # Switch to non-root user
 USER nodejs
