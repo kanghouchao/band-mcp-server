@@ -1,58 +1,139 @@
 # Band MCP Server
 
-A fully functional Model Context Protocol (MCP) server that integrates with the [Band API](https://developers.band.us/develop/guide/api). This server enables seamless interaction with Band social platform data through AI assistants and other MCP-compatible tools.
+[![NPM Version](https://img.shields.io/npm/v/band-mcp-server.svg)](https://www.npmjs.com/package/band-mcp-server)
+[![Docker Pulls](https://img.shields.io/docker/pulls/kanghouchao/band-mcp-server.svg)](https://hub.docker.com/r/kanghouchao/band-mcp-server)
 
-## ✅ Project Status: Production Ready
+A fully functional [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that integrates with the [Band API](https://developers.band.us/develop/guide/api). This server enables seamless interaction with the Band social platform through AI assistants and other MCP-compatible tools.
 
-**Docker Image:** `kanghouchao/band-mcp-server:latest`
-**NPM Package:** `band-mcp-server`
+## Overview
 
-This MCP server is fully implemented and provides complete access to Band API functionality including user profiles, band management, posts, comments, albums, and photos with full read/write capabilities.
+This server can be used in two primary ways:
 
+1.  **As a standalone executable:** Installed via `npm` and configured directly in a compatible MCP client.
+2.  **As a Docker container:** Pulled from Docker Hub and configured in a compatible MCP client to be run on-demand.
 
-## Quick Start
+## Usage & Client Configuration
 
-### Prerequisites
+To use this server, you need a **Band API Access Token**. You can obtain one from the [Band Developer Portal](https://developers.band.us/develop/myapps/list).
 
-- Band API access token (obtainable from [Band Developer Portal](https://developers.band.us/develop/myapps/list))
+Below are configuration examples for different clients and usage methods.
 
-### MCP Client Configuration (e.g., VSCode)
+### Example 1: Claude Desktop (NPM version)
+
+This method assumes you have installed the server via `npm install -g band-mcp-server`.
+
+1.  In Claude Desktop, open **Settings > Developer** and click **Edit Config**.
+2.  Add the following to the `mcpServers` object in `claude_desktop_config.json`:
 
 ```json
 {
-  "mcp": {
-    "inputs": [
-      {
-        "type": "promptString",
-        "id": "band_access_token",
-        "description": "BAND Access Token",
-        "password": true
-      }
-    ],
-    "servers": {
-      "band-mcp-server": {
-        "command": "docker",
-        "args": ["run", "--rm", "-i", "-e", "BAND_ACCESS_TOKEN", "kanghouchao/band-mcp-server:latest"],
-        "env": {
-          "BAND_ACCESS_TOKEN": "${input:band_access_token}"
-        }
+  "mcpServers": {
+    "band-api": {
+      "command": "band-mcp-server",
+      "args": [],
+      "env": {
+        "BAND_ACCESS_TOKEN": "your_band_api_access_token"
       }
     }
   }
 }
 ```
+*Replace `your_band_api_access_token` with your actual token.*
 
-### Tool Tips
+### Example 2: Claude Desktop (Docker version)
 
-- `get_posts` now accepts either a raw `band_key` or a full Band URL such as `https://band.us/band/{band_key}`. When a URL is supplied the server extracts the `band_key` automatically.
-- `get_comments` likewise accepts a comment or post URL (e.g. `https://band.us/band/{band_key}/post/{post_key}?commentId={comment_key}`) and filters the response down to the referenced comment when possible.
+This method uses the Docker image and does not require `npm`.
+
+1.  In Claude Desktop, open **Settings > Developer** and click **Edit Config**.
+2.  Add the following to the `mcpServers` object in `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "band-api-docker": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "BAND_ACCESS_TOKEN=your_band_api_access_token",
+        "kanghouchao/band-mcp-server:latest"
+      ]
+    }
+  }
+}
+```
+*Replace `your_band_api_access_token` with your actual token.*
+
+## Local Development
+
+Instructions for setting up the project for local development.
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (version specified in `package.json`)
+- [Docker](https://www.docker.com/)
+
+### Setup
+
+Clone the repository and install dependencies using the `make` command:
+
+```bash
+make install
+```
+
+### Running the Dev Server
+
+To run the server with hot-reloading:
+
+```bash
+make dev
+```
+
+### Running Tests
+
+To run the test suite:
+
+```bash
+make test
+```
+
+### Building the Project
+
+To compile the TypeScript code:
+
+```bash
+make build
+```
+
+### Linting
+
+To check the code against linting rules:
+
+```bash
+make lint
+```
+To automatically fix linting issues:
+```bash
+make lint-fix
+```
+
+### Docker
+
+To build the Docker image locally:
+
+```bash
+make docker-build
+```
+
+To run the locally built image (requires `BAND_ACCESS_TOKEN` to be set in your shell environment):
+
+```bash
+export BAND_ACCESS_TOKEN="your_token_here"
+make docker-run
+```
 
 ## License
 
-MIT License - see LICENSE file for details.
-
----
-
-**Maintainer**: kanghouchao  
-**Docker Hub**: [kanghouchao/band-mcp-server](https://hub.docker.com/r/kanghouchao/band-mcp-server)  
-**Issues**: Please report bugs and feature requests via GitHub Issues
+This project is licensed under the MIT License.

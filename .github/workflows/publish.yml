@@ -126,3 +126,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           target: production
+
+      - name: Update Docker Hub description
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: "kanghouchao"
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          repository: kanghouchao/band-mcp-server
+          readme: ./DOCKER_README.md
