@@ -34,10 +34,30 @@ jobs:
           PKG_VERSION=$(jq -r .version package.json)
           echo "pkg_name=$PKG_NAME" >> $GITHUB_OUTPUT
           echo "pkg_version=$PKG_VERSION" >> $GITHUB_OUTPUT
+    
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '23.11.0'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
 
   # NPM publish job: run only for semver-like tags (vX.Y.Z or other tags containing a dot)
   publish-npm:
-    needs: get-package-meta
+    needs:
+      - get-package-meta
+      - test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -50,13 +70,10 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build
         run: npm run build
-
-      - name: Run tests
-        run: npm test
 
       - name: Publish package
         env:
@@ -79,7 +96,9 @@ jobs:
 
   # Docker: build-and-push on any v* tag (includes vX or vX.Y.Z)
   publish-docker:
-    needs: get-package-meta
+    needs: 
+      - get-package-meta
+      - test
     runs-on: ubuntu-latest
 
     steps:
@@ -126,3 +145,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           target: production
+
+      - name: Update Docker Hub description
+        uses: peter-evans/dockerhub-description@v4.0.2
+        with:
+          username: "kanghouchao"
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          repository: kanghouchao/band-mcp-server
+          readme-filepath: ./DOCKER_README.md

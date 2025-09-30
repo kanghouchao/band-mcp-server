@@ -1,7 +1,8 @@
 {
   "name": "band-mcp-server",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "Model Context Protocol server for Band API integration",
+  "readme": "NPM_README.md",
   "main": "dist/index.js",
   "bin": {
     "band-mcp-server": "bin/band-mcp-server"
