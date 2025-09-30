@@ -147,3 +147,5 @@ typings/
 .specify/
 .github/prompts/
 specs/
+
+package-lock.json
