@@ -1,26 +1,22 @@
 # Multi-stage build for band-mcp-server
-FROM node:23.11.0-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
+FROM node:23.11.0-alpine AS builder
 WORKDIR /app
 
-# Copy package files
+# Copy package files (including lockfile if present) so npm can install devDependencies
 COPY package.json ./
+
+# Install all dependencies (including devDependencies) so that build tools like tsc are available
 RUN npm install
 
-# Build stage
-FROM base AS builder
-WORKDIR /app
-
-# Copy package files
+# Copy tsconfig and source code
 COPY tsconfig.json ./
-
-# Copy source code
 COPY src ./src
 
-# Build the application
+# Build the application (requires tsc from devDependencies)
 RUN npm run build
+
+# Remove devDependencies to slim down the final node_modules we copy to the production image
+RUN npm prune --production
 
 # Production stage
 FROM node:23.11.0-alpine AS production
@@ -31,7 +27,7 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nodejs
 
 # Copy production dependencies
-COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 
 # Copy built application
 COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
