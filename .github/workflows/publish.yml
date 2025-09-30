@@ -76,7 +76,7 @@ jobs:
         run: npm run build
       
       - name: Prune dev dependencies
-        run: RUN npm prune --production
+        run: npm prune --production
 
       - name: Publish package
         env:
