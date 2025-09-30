@@ -37,6 +37,8 @@ COPY --chown=nodejs:nodejs package.json ./
 
 COPY --chown=nodejs:nodejs bin ./bin
 
+ENV NODE_ENV=production
+
 # Switch to non-root user
 USER nodejs
 
