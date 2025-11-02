@@ -8,6 +8,10 @@
 
 A fully functional [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that integrates with the [Band API](https://developers.band.us/develop/guide/api). This server enables seamless interaction with the Band social platform through AI assistants and other MCP-compatible tools.
 
+<a href="https://glama.ai/mcp/servers/@kanghouchao/band-mcp-server">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@kanghouchao/band-mcp-server/badge" alt="Band Server MCP server" />
+</a>
+
 ## Overview
 
 This server can be used in two primary ways:
